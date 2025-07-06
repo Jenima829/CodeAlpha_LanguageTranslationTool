@@ -1,0 +1,81 @@
+Project : Language Translation Tool using Artificial Intelligence
+
+CODE:
+import tkinter as tk
+from tkinter import ttk, messagebox
+from googletrans import Translator, LANGUAGES
+from gtts import gTTS
+import playsound
+import os
+
+# Initialize AI translator
+translator = Translator()
+
+# Function to detect language and translate
+def translate_text():
+    try:
+        input_text = text_input.get("1.0", tk.END)
+        detected = translator.detect(input_text)
+        src_code = detected.lang
+        tgt_lang = target_lang.get()
+        tgt_code = lang_dict[tgt_lang]
+        
+        translated = translator.translate(input_text, src=src_code, dest=tgt_code)
+        translated_text.delete("1.0", tk.END)
+        translated_text.insert(tk.END, translated.text)
+        
+        info.set(f"Detected Language: {LANGUAGES[src_code].title()}")
+    except Exception as e:
+        messagebox.showerror("AI Translation Error", str(e))
+
+# AI-based Text-to-Speech
+def text_to_speech():
+    try:
+        tts = gTTS(text=translated_text.get("1.0", tk.END), lang=lang_dict[target_lang.get()])
+        tts.save("speech.mp3")
+        playsound.playsound("speech.mp3")
+        os.remove("speech.mp3")
+    except Exception as e:
+        messagebox.showerror("AI Speech Error", str(e))
+
+def copy_to_clipboard():
+    root.clipboard_clear()
+    root.clipboard_append(translated_text.get("1.0", tk.END))
+    messagebox.showinfo("Copied", "Translated text copied to clipboard!")
+
+# Mapping of language names to codes
+lang_dict = {lang.title(): code for code, lang in LANGUAGES.items()}
+
+# UI Setup
+root = tk.Tk()
+root.title("🌍 AI Language Translator Tool - CodeAlpha AI Internship")
+root.geometry("600x500")
+
+tk.Label(root, text="📝 Enter Text:", font=("Arial", 12)).pack(pady=5)
+text_input = tk.Text(root, height=5, width=60)
+text_input.pack()
+
+frame = tk.Frame(root)
+frame.pack(pady=10)
+
+tk.Label(frame, text="🎯 Translate To:").grid(row=0, column=0, padx=5)
+target_lang = ttk.Combobox(frame, values=list(lang_dict.keys()), width=20)
+target_lang.set("Tamil")
+target_lang.grid(row=0, column=1)
+
+tk.Button(root, text="🔁 Translate using AI", command=translate_text).pack(pady=10)
+
+info = tk.StringVar()
+tk.Label(root, textvariable=info, font=("Arial", 10, "italic"), fg="blue").pack()
+
+tk.Label(root, text="📘 Translated Output:", font=("Arial", 12)).pack()
+translated_text = tk.Text(root, height=5, width=60)
+translated_text.pack()
+
+btn_frame = tk.Frame(root)
+btn_frame.pack(pady=10)
+
+tk.Button(btn_frame, text="🔊 Text-to-Speech", command=text_to_speech).grid(row=0, column=0, padx=10)
+tk.Button(btn_frame, text="📋 Copy", command=copy_to_clipboard).grid(row=0, column=1, padx=10)
+
+root.mainloop()
